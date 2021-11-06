@@ -104,7 +104,7 @@ $(document).ready(function() {
 				link.append(image);
 				photos.push(link);
 				(function(theLink, theImage, theAlbum) {
-					theImage.error(function() {
+					theImage.on("error", function() {
 						photos.splice(photos.indexOf(theLink), 1);
 						theLink.remove();
 						theAlbum.photos.splice(theAlbum.photos.indexOf(theImage.get(0).photo), 1);
@@ -183,32 +183,31 @@ $(document).ready(function() {
 	}
 	function showPhoto() {
 		var width, height, photoSrc, videoSrc, previousPhoto, nextPhoto, nextLink, text;
-        width = currentPhoto.size[0];
-        height = currentPhoto.size[1];
+		width = currentPhoto.size[0];
+		height = currentPhoto.size[1];
 
 		if (currentPhoto.mediaType == "video") {
-            if (!Modernizr.video) {
-                $('<div id="video-unsupported"><p>Sorry, your browser doesn\'t support the HTML5 &lt;video&gt; element!</p><p>Here\'s a <a href="http://caniuse.com/video">list of which browsers do</a>.</p></div>').appendTo('#video-box-inner');
-            }
-            else if (!Modernizr.video.webm) {
-                $('<div id="video-unsupported"><p>Sorry, your browser doesn\'t support the WebM video format!</p></div>').appendTo('#video-box-inner');
-            }
-            else {
-                $(window).unbind("resize", scaleVideo);
-                $(window).unbind("resize", scaleImage);
-                videoSrc = photoFloat.videoPath(currentAlbum, currentPhoto);
-                $('<video/>', { id: 'video', controls: true }).appendTo('#video-box-inner')
-                    .attr("width", width).attr("height", height).attr("ratio", currentPhoto.size[0] / currentPhoto.size[1])
-                    .attr("src", videoSrc)
-                    .attr("alt", currentPhoto.name)
-                    .on('loadstart', scaleVideo);
-            }
+			$("#video-box-inner").empty();
+			if (!Modernizr.video) {
+				$('<div id="video-unsupported"><p>Sorry, your browser doesn\'t support the HTML5 &lt;video&gt; element!</p><p>Here\'s a <a href="http://caniuse.com/video">list of which browsers do</a>.</p></div>').appendTo('#video-box-inner');
+			}
+			else if (!Modernizr.video.h264) {
+				$('<div id="video-unsupported"><p>Sorry, your browser doesn\'t support the H.264 video format!</p></div>').appendTo('#video-box-inner');
+			} else {
+				$(window).unbind("resize", scaleVideo);
+				$(window).unbind("resize", scaleImage);
+				videoSrc = photoFloat.videoPath(currentAlbum, currentPhoto);
+				$('<video/>', { id: 'video', controls: true }).appendTo('#video-box-inner')
+					.attr("width", width).attr("height", height).attr("ratio", currentPhoto.size[0] / currentPhoto.size[1])
+					.attr("src", videoSrc)
+					.attr("alt", currentPhoto.name)
+					.on('loadstart', scaleVideo);
+			}
 			$("head").append("<link rel=\"video_src\" href=\"" + videoSrc + "\" />");
 			$("#video-box-inner").css('height', height + 'px').css('margin-top', - height / 2);
 			$("#photo-box").hide();
 			$("#video-box").show();
-		}
-		else {
+		} else {
 			width = currentPhoto.size[0];
 			height = currentPhoto.size[1];
 			if (width > height) {
@@ -226,7 +225,7 @@ $(document).ready(function() {
 				.attr("src", photoSrc)
 				.attr("alt", currentPhoto.name)
 				.attr("title", currentPhoto.date)
-				.load(scaleImage);
+				.on("load", scaleImage);
 			$("head").append("<link rel=\"image_src\" href=\"" + photoSrc + "\" />");
 			$("#video-box-inner").empty();
 			$("#video-box").hide();
@@ -315,11 +314,6 @@ $(document).ready(function() {
 	$(window).hashchange(function() {
 		$("#loading").show();
 		$("link[rel=image_src]").remove();
-		$("link[rel=video_src]").remove();
-		if (location.search.indexOf("?_escaped_fragment_=") === 0) {
-			location.hash = location.search.substring(20);
-			location.search = "";
-		}
 		photoFloat.parseHash(location.hash, hashParsed, die);
 	});
 	$(window).hashchange();

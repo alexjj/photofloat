@@ -1,6 +1,6 @@
 # PhotoFloat
 ### A Web 2.0 Photo Gallery Done Right via Static JSON & Dynamic Javascript
-#### by Jason A. Donenfeld (<Jason@zx2c4.com>)
+#### by Jason A. Donenfeld (<Jason@zx2c4.com>), modified by Joachim Tingvold (<joachim@tingvold.com>)
 
 ![Screenshot](http://data.zx2c4.com/photo-float-small.jpg)
 
@@ -35,11 +35,29 @@ The JavaScript application consists of a single `index.html` file with a single 
 
 It is, essentially, the slickest and fastest, most minimal but still well-featured photo gallery app on the net.
 
+Changes from 'stock' PhotoFloat:
+
+* HTML5-ified somewhat (including video support)
+* Thumb generation is now threaded to save some time
+* Threaded transcoding of videos
+* Images are preloaded to avoid having to wait
+* All JavaScript libraries was updated (including broken jQuery Mousewheel)
+* Removed the Java-crap to minify .js/.css-files
+* Use external minify-service that doesn't require any installed binaries
+* Add logic to check that thumbs/transcode actually exist (to make sure they are recreated if deleted)
+* Use more sane values for video transcoding (i.e. H264 rather than WebM)
+* Handle old and weird videos (we try several types of transcodes)
+* Improved loading of videos when browsing galleries
+* Lots of bugfixes
+* Properly handle PNG images (thumbs and timestamps from EXIF)
+* Better handling of timestamps in general
+
+
 ## Installation
 
 #### Download the source code from the git repository:
 
-    $ git clone git://git.zx2c4.com/PhotoFloat
+    $ git clone https://github.com/tingvold/photofloat.git
     $ cd PhotoFloat
 
 #### Change or delete the Google Analytics ID tracker:
@@ -154,25 +172,6 @@ Note that the `internal-*` paths must match that of `app.cfg`. This makes use of
     die-on-idle = true
     plugins = python27
     module = floatapp:app
-
-## Optional: Server-side Rendering
-
-Some webpages may desire to optionally render pages server side when special query strings are attached, so that GoogleBot may index pages. PhotoFloat supports the [AJAX crawl specification](https://developers.google.com/webmasters/ajax-crawling/).
-
-    location / {
-            location = / {
-                include uwsgi_params;
-                uwsgi_param HTTP_X_SE_ORIGINAL_URL $scheme://$host$request_uri;
-                if ($args ~* _escaped_fragment_=) {
-                    uwsgi_pass unix:/var/run/uwsgi-apps/server-execute-phantom.socket;
-                }
-            }
-            index index.html;
-            root /var/www/htdocs/photos.jasondonenfeld.com;
-    }
-
-This makes use of the [Server Execute Phantom project](http://git.zx2c4.com/server-execute-phantom/about/).
-
 
 ## Optional: Deployment Makefiles
 
