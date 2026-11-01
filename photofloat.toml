@@ -1,0 +1,32 @@
+# PhotoFloat settings. Every line is optional; delete or comment out
+# anything you're happy with the default for. Command line options
+# (see `photofloat scan --help`) override what's in here.
+
+# Title shown at the top left of the page and in the browser tab.
+title = "Photos"
+
+# Where things live. "site" is the folder you upload to your web host.
+site = "web"
+# albums = "web/albums"     # your photos, one folder per album
+# cache = "web/cache"       # generated thumbnails, photos and JSON
+
+# Sizes (longest side, in pixels) of the photos shown in the viewer.
+# The page picks the smallest one that looks sharp on the visitor's
+# screen, so phones don't download 4K images. Add 5120 for 5K monitors,
+# or drop 3840 to save disk space.
+photo_sizes = [1280, 2048, 3840]
+
+# Square thumbnail sizes. 300 is used on high-DPI ("retina") screens.
+thumb_sizes = [150, 300]
+
+# JPEG quality, 1-100.
+quality = 85
+
+# Videos are converted to MP4 with the short side at most this many pixels.
+video_size = 1080
+
+# Show the "download original" link under photos.
+download_originals = true
+
+# Number of photos processed in parallel. 0 = use all CPU cores.
+jobs = 0

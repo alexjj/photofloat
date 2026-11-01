@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<meta name="medium" content="image" />
+	<meta name="theme-color" content="#222222" />
 	<title>Photos</title>
-	<link href="css/styles.min.css" rel="stylesheet" type="text/css" />
-	<script type="text/javascript" src="js/scripts.min.js"></script>
+	<link href="css/photofloat.css?v=3" rel="stylesheet" />
+	<script src="js/photofloat.js?v=3" defer></script>
+	<script src="js/display.js?v=3" defer></script>
 </head>
 <body>
 <div id="title">Photos</div>
 <div id="photo-view">
 	<div id="photo-box">
-		<a id="next-photo"><img id="photo" /></a>
+		<a id="next-photo"><img id="photo" alt="" /></a>
 		<div id="photo-bar">
 			<div id="photo-links">
-				<a id="metadata-link" href="javascript:void(0)">show metadata</a> | <a id="original-link" target="_blank">download original</a><span id="fullscreen-divider"> | </span><a id="fullscreen" href="javascript:void(0)">fullscreen</a>
+				<a id="metadata-link" href="javascript:void(0)">show metadata</a><span id="original-divider"> | </span><a id="original-link" target="_blank" rel="noopener">download original</a><span id="fullscreen-divider"> | </span><a id="fullscreen" href="javascript:void(0)">fullscreen</a>
 			</div>
 			<div id="metadata"></div>
 		</div>
@@ -24,7 +26,7 @@
 		<div id="video-box-inner">
 		</div>
 	</div>
-	
+
 	<a id="back">&lsaquo;</a>
 	<a id="next">&rsaquo;</a>
 </div>
@@ -33,12 +35,11 @@
 		<div id="loading">Loading...</div>
 	</div>
 	<div id="subalbums"></div>
-	<div id="powered-by">Powered by <a href="http://www.zx2c4.com/projects/photofloat/" target="_blank">PhotoFloat</a></div>
 </div>
 
 <div id="error-overlay"></div>
 <div id="error-text">Forgot my camera.</div>
-<div id="auth-text"><form id="auth-form"><input id="password" type="password" /><input type="submit" value="Login" /></form</div>
+<div id="auth-text"><form id="auth-form"><input id="password" type="password" autocomplete="current-password" /><input type="submit" value="Login" /></form></div>
 
 </body>
 </html>
