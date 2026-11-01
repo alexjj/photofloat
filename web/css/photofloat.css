@@ -1,38 +1,10 @@
-@font-face {
-	font-family: "LM Roman";
-	font-weight: bold;
-	font-style: normal;
-	font-display: swap;
-	src: url("../fonts/lmroman10-bold.otf");
-}
-@font-face {
-	font-family: "LM Roman";
-	font-weight: bold;
-	font-style: italic;
-	font-display: swap;
-	src: url("../fonts/lmroman10-bolditalic.otf");
-}
-@font-face {
-	font-family: "LM Roman";
-	font-weight: normal;
-	font-style: italic;
-	font-display: swap;
-	src: url("../fonts/lmroman10-italic.otf");
-}
-@font-face {
-	font-family: "LM Roman";
-	font-weight: normal;
-	font-style: normal;
-	font-display: swap;
-	src: url("../fonts/lmroman10-regular.otf");
-}
-
 body {
 	margin: 0;
 	padding: 0;
 	background-color: #222222;
-	font-family: "LM Roman", "Georgia", "Palatino Linotype", "Palatino", "Times New Roman", "Times", serif;
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 	color: #FFFFFF;
+	-webkit-text-size-adjust: 100%;
 }
 a {
 	color: #84AAC2;
@@ -45,9 +17,14 @@ a:hover {
 #title {
 	position: absolute;
 	top: 0;
+	left: 0;
+	right: 0;
 	padding: 0.4em;
-	font-weight: bold;
+	font-weight: 600;
 	font-size: 1.15em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 #loading {
 	display: none;
@@ -82,8 +59,12 @@ a:hover {
 	width: 150px;
 	height: 60px;
 	text-align: center;
-	font-style: italic;
 	font-size: 12px;
+	line-height: 1.3;
+	padding-left: 2px;
+	padding-right: 2px;
+	box-sizing: content-box;
+	overflow: hidden;
 	background-repeat: no-repeat;
 	background-position: top;
 	background-size: 150px 150px;
@@ -116,6 +97,16 @@ a:hover {
 	border: 0;
 	left: 0;
 }
+#photo.fit-width {
+	width: 100%;
+	height: auto;
+	position: absolute;
+	bottom: 0;
+}
+#photo.fit-height {
+	height: 100%;
+	width: auto;
+}
 #photo-view {
 	position: absolute;
 	bottom: 150px;
@@ -137,12 +128,12 @@ a:hover {
 }
 #photo-links {
 	background-color: #000000;
-	font-weight: bold;
-	height: 10px;
-	font-size: 10px;
-	line-height: 7px;
-	padding: 3px 10px;
-	display: inline;
+	font-weight: 600;
+	font-size: 11px;
+	line-height: 1;
+	padding: 4px 10px;
+	display: inline-block;
+	white-space: nowrap;
 	border-top-right-radius: 5px;
 	border-top-left-radius: 5px;
 	opacity: 0;
@@ -159,7 +150,7 @@ a:hover {
 	max-width: calc(100% - 20px);
 	box-sizing: border-box;
 	font-size: 12px;
-	line-height: 12px;
+	line-height: 1.25;
 	padding: 3px 10px;
 	display: none;
 	margin: 0 auto;
@@ -173,8 +164,9 @@ a:hover {
 	margin: auto auto;
 	text-align: left;
 }
-#metadata tr {
-	height: 14px;
+#metadata td:first-child {
+	padding-right: 0.75em;
+	color: #BBBBBB;
 }
 #photo-bar {
 	position: absolute;
@@ -198,15 +190,6 @@ a:hover {
 	text-align: center;
 }
 
-#powered-by {
-	clear: both;
-	text-align: center;
-	font-size: 0.85em;
-	font-style: italic;
-	font-weight: bold;
-	text-shadow: rgba(0,0,0,0.5) -1px 0, rgba(0,0,0,0.3) 0 -1px, rgba(255,255,255,0.5) 0 1px, rgba(0,0,0,0.3) -1px -2px;
-	color: #FFAD27;
-}
 #error-overlay, #error-text, #auth-text {
 	position: fixed;
 	top: 0;
@@ -225,8 +208,10 @@ a:hover {
 }
 #error-text {
 	font-size: 4em;
-	font-weight: bold;
-	font-style: italic;
+	font-weight: 600;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	box-sizing: border-box;
 }
 
 #video-unsupported {
@@ -242,8 +227,11 @@ a:hover {
 	border: 0;
 	font-family: inherit;
 	font-size: 2em;
-	font-weight: bold;
-	font-style: italic;
+	font-weight: 600;
+	padding: 0.1em 0.3em;
+	margin: 0.2em;
+	max-width: 80vw;
+	border-radius: 4px;
 }
 
 /* Fullscreen photo: fill the screen, keep the aspect ratio. */
@@ -252,9 +240,104 @@ a:hover {
 	height: 100% !important;
 	object-fit: contain;
 	position: static !important;
+	transform: none !important;
 	background-color: #000000;
 }
 
+/* Touch screens have no hover: keep the photo links visible. */
+@media (hover: none) {
+	#photo-links {
+		opacity: 0.6;
+		visibility: visible;
+	}
+	#photo-links a {
+		display: inline-block;
+		padding: 4px 2px;
+	}
+}
+
+/* Phones */
+@media only screen and (max-width: 600px) {
+	#title {
+		font-size: 1em;
+		padding: 0.6em 0.5em;
+	}
+	#album-view {
+		left: 0;
+		right: 0;
+		padding: 0.25em 4px 1em;
+	}
+	/* Album page: thumbnails and albums fill the screen width in a grid */
+	#album-view:not(.photo-view-container) #thumbs {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 2px;
+	}
+	#album-view:not(.photo-view-container) #thumbs a {
+		display: block;
+	}
+	#album-view:not(.photo-view-container) #thumbs img {
+		display: block;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 1 / 1;
+	}
+	#subalbums {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.75em 8px;
+		padding-top: 1em;
+		padding-bottom: 1em;
+	}
+	#subalbums a {
+		display: block;
+		min-width: 0;
+	}
+	.album-button {
+		float: none;
+		width: auto;
+		height: auto;
+		min-height: 2.6em;
+		padding-top: calc(100% + 0.4em);
+		background-size: 100% auto;
+		font-size: 14px;
+	}
+	/* Photo page: smaller thumbnail strip, photo centred */
+	#photo-view {
+		bottom: 64px;
+		margin-bottom: 4px;
+	}
+	.photo-view-container {
+		height: 64px;
+	}
+	.photo-view-container #thumbs img {
+		width: 64px;
+		height: 64px;
+	}
+	#photo.fit-width {
+		bottom: auto;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+	#next, #back {
+		font-size: 3em;
+		padding: 0.3em 0.1em;
+		line-height: 0.5;
+		text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+	}
+	#metadata {
+		font-size: 11px;
+	}
+	#error-text {
+		font-size: 2em;
+		padding-top: 40%;
+	}
+	#auth-text {
+		padding-top: 40%;
+	}
+}
+
+/* Short screens, e.g. phones turned sideways */
 @media only screen and (max-height: 640px) {
 	#photo-view {
 		top: 0;

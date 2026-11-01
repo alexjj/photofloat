@@ -16,6 +16,8 @@
 	var originalTitle = document.title;
 	var photoFloat = new PhotoFloat();
 	var THUMB_SIZE = 150; /* CSS pixels, matches the stylesheet */
+	/* On phones thumbnails are a 3 column grid (see the stylesheet) */
+	var THUMB_SIZES = "(max-width: 600px) 34vw, " + THUMB_SIZE + "px";
 	var shownPhotoSize = 0; /* size of the photo file currently displayed */
 	var lastWheel = 0;
 
@@ -30,7 +32,7 @@
 	/* Like jQuery, quietly ignore elements that aren't on the page */
 	function show(element, display) {
 		if (element)
-			element.style.display = display || "block";
+			element.style.display = display === undefined ? "block" : display;
 	}
 	function hide(element) {
 		if (element)
@@ -136,7 +138,7 @@
 	function thumbSources(album, photo) {
 		var sizes = photoFloat.options.thumbSizes, srcset = [], i;
 		for (i = 0; i < sizes.length; ++i)
-			srcset.push(photoFloat.photoPath(album, photo, sizes[i], true) + " " + (sizes[i] / THUMB_SIZE) + "x");
+			srcset.push(photoFloat.photoPath(album, photo, sizes[i], true) + " " + sizes[i] + "w");
 		return {
 			src: photoFloat.photoPath(album, photo, photoFloat.pickSize(sizes, THUMB_SIZE), true),
 			srcset: srcset.join(", "),
@@ -173,6 +175,7 @@
 					image.src = "img/video-icon.png";
 				} else {
 					image.srcset = sources.srcset;
+					image.sizes = THUMB_SIZES;
 					image.src = sources.src;
 				}
 				image.photo = photo;
@@ -197,7 +200,8 @@
 					link.appendChild(button);
 					subalbumsElement.appendChild(link);
 					photoFloat.albumPhoto(theAlbum, function(album, photo) {
-						button.style.backgroundImage = "url(\"" + photoFloat.photoPath(album, photo, photoFloat.thumbSize(THUMB_SIZE), true) + "\")";
+						var cssSize = window.matchMedia("(max-width: 600px)").matches ? window.innerWidth / 2 : THUMB_SIZE;
+						button.style.backgroundImage = "url(\"" + photoFloat.photoPath(album, photo, photoFloat.thumbSize(cssSize), true) + "\")";
 					}, function() {
 						var index = theContainer.albums.indexOf(theAlbum);
 						if (index !== -1)
@@ -216,7 +220,7 @@
 		if (currentPhoto === null) {
 			$$("#thumbs img").forEach(function(image) { image.classList.remove("current-thumb"); });
 			$("#album-view").classList.remove("photo-view-container");
-			show($("#subalbums"));
+			show($("#subalbums"), ""); /* back to the stylesheet's display (grid on phones) */
 			hide($("#photo-view"));
 			$("#video-box-inner").textContent = "";
 			hide($("#video-box"));
@@ -257,17 +261,9 @@
 
 	function scaleImage() {
 		var image = $("#photo"), container = $("#photo-view");
-		if (container.clientHeight * parseFloat(image.getAttribute("ratio")) > container.clientWidth) {
-			image.style.width = "100%";
-			image.style.height = "auto";
-			image.style.position = "absolute";
-			image.style.bottom = "0";
-		} else {
-			image.style.height = "100%";
-			image.style.width = "auto";
-			image.style.position = "";
-			image.style.bottom = "";
-		}
+		var fitWidth = container.clientHeight * parseFloat(image.getAttribute("ratio")) > container.clientWidth;
+		image.classList.toggle("fit-width", fitWidth);
+		image.classList.toggle("fit-height", !fitWidth);
 	}
 
 	function scaleVideo() {
@@ -524,6 +520,23 @@
 			lastWheel = now;
 			go(e.deltaY > 0 ? "#next" : "#back");
 		}, { passive: false });
+
+		/* Swipe left/right on touch screens */
+		var touchStart = null;
+		$("#photo-view").addEventListener("touchstart", function(e) {
+			touchStart = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+		}, { passive: true });
+		$("#photo-view").addEventListener("touchend", function(e) {
+			if (touchStart === null || currentPhoto === null || e.changedTouches.length !== 1)
+				return;
+			if (window.visualViewport && window.visualViewport.scale > 1.05)
+				return; /* zoomed in: let the user pan */
+			var dx = e.changedTouches[0].clientX - touchStart.x;
+			var dy = e.changedTouches[0].clientY - touchStart.y;
+			touchStart = null;
+			if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy))
+				go(dx < 0 ? "#next" : "#back");
+		}, { passive: true });
 
 		window.addEventListener("resize", function() {
 			if (currentPhoto === null)

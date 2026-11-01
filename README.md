@@ -54,7 +54,8 @@ Changes in 2.0:
 * High resolution photos (up to 4K by default) and 2x thumbnails, picked to suit each visitor's screen
 * Colour profiles are kept, so photos look right on wide-gamut screens
 * Photos are processed in parallel, one per CPU core
-* No front-end build step and no JavaScript libraries; the page is plain JavaScript
+* No front-end build step and no JavaScript libraries; the page is plain JavaScript using the system fonts
+* Phone friendly: thumbnail grid that fills the screen, swipe between photos, centred photos, always-visible photo links on touch screens
 * Built-in preview server (`photofloat serve`)
 * HEIC support (optional), correct f-numbers, lens info, videos up to 1080p with modern rotation handling
 

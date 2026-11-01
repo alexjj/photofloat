@@ -3,7 +3,7 @@ AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript appl
 
 <IfModule mod_headers.c>
 	# Generated images and fonts never change under the same name.
-	<FilesMatch "\.(jpg|otf|ico|png|mp4)$">
+	<FilesMatch "\.(jpg|ico|png|mp4)$">
 		Header set Cache-Control "max-age=29030400, public"
 	</FilesMatch>
 	<FilesMatch "\.(css|js)$">
