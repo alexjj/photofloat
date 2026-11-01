@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "photofloat"
+version = "2.0.0"
+description = "A static, directory based web photo gallery"
+readme = "README.md"
+license = { text = "GPL-2.0-or-later" }
+requires-python = ">=3.10"
+dependencies = [
+    "Pillow>=10.1",
+]
+
+[project.optional-dependencies]
+# Read HEIC/HEIF photos (iPhone default format)
+heif = ["pillow-heif>=0.16"]
+# Optional login server for password protected albums
+server = ["flask>=3.0", "flask-login>=0.6.3"]
+
+[project.scripts]
+photofloat = "photofloat.cli:main"
+
+[tool.setuptools]
+packages = ["photofloat", "photofloat.floatapp"]
+
+[tool.setuptools.package-data]
+"photofloat.floatapp" = ["app.cfg", "auth.txt"]

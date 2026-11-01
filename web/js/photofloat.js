@@ -1,62 +1,88 @@
+/*
+ * PhotoFloat: fetches the album JSON files made by the scanner and works
+ * out the URLs of the generated images. The file naming must match
+ * photofloat/cachepath.py.
+ */
 (function() {
-	/* constructor */
+	"use strict";
+
 	function PhotoFloat() {
-		this.albumCache = [];
+		this.albumCache = {};
+		this.options = {
+			title: null,
+			thumbSizes: [150, 300],
+			photoSizes: [1024, 1600],
+			downloadOriginals: true
+		};
 	}
-	
-	/* public member functions */
+
+	function getJSON(url) {
+		return fetch(url, { credentials: "same-origin" }).then(function(response) {
+			if (!response.ok) {
+				var error = new Error("HTTP " + response.status);
+				error.status = response.status;
+				throw error;
+			}
+			return response.json();
+		});
+	}
+
+	/* Scanner settings (image sizes, title). Missing on old caches: keep defaults. */
+	PhotoFloat.prototype.loadOptions = function() {
+		var self = this;
+		return getJSON("cache/options.json").then(function(options) {
+			for (var key in options)
+				self.options[key] = options[key];
+			self.options.thumbSizes.sort(function(a, b) { return a - b; });
+			self.options.photoSizes.sort(function(a, b) { return a - b; });
+		}, function() {});
+	};
+
 	PhotoFloat.prototype.album = function(subalbum, callback, error) {
-		var cacheKey, ajaxOptions, self;
+		var cacheKey, self = this;
 		if (typeof subalbum.photos !== "undefined" && subalbum.photos !== null) {
 			callback(subalbum);
 			return;
 		}
-		if (Object.prototype.toString.call(subalbum).slice(8, -1) === "String")
+		if (typeof subalbum === "string")
 			cacheKey = subalbum;
 		else
 			cacheKey = PhotoFloat.cachePath(subalbum.parent.path + "/" + subalbum.path);
-		if (this.albumCache.hasOwnProperty(cacheKey)) {
+		if (Object.prototype.hasOwnProperty.call(this.albumCache, cacheKey)) {
 			callback(this.albumCache[cacheKey]);
 			return;
 		}
-		self = this;
-		ajaxOptions = {
-			type: "GET",
-			dataType: "json",
-			url: "cache/" + cacheKey + ".json",
-			success: function(album) {
-				var i;
-				for (i = 0; i < album.albums.length; ++i)
-					album.albums[i].parent = album;
-				for (i = 0; i < album.photos.length; ++i)
-					album.photos[i].parent = album;
-				self.albumCache[cacheKey] = album;
-				callback(album);
-			}
-		};
-		if (typeof error !== "undefined" && error !== null) {
-			ajaxOptions.error = function(jqXHR, textStatus, errorThrown) {
-				error(jqXHR.status);
-			};
-		}
-		$.ajax(ajaxOptions);
+		getJSON("cache/" + cacheKey + ".json").then(function(album) {
+			var i;
+			for (i = 0; i < album.albums.length; ++i)
+				album.albums[i].parent = album;
+			for (i = 0; i < album.photos.length; ++i)
+				album.photos[i].parent = album;
+			self.albumCache[cacheKey] = album;
+			callback(album);
+		}, function(e) {
+			if (typeof error === "function")
+				error(e.status || 0);
+		});
 	};
+
+	/* Picks a random photo somewhere inside an album, for album covers. */
 	PhotoFloat.prototype.albumPhoto = function(subalbum, callback, error) {
-		var nextAlbum, self;
-		self = this;
-		nextAlbum = function(album) {
+		var self = this;
+		function nextAlbum(album) {
 			var index = Math.floor(Math.random() * (album.photos.length + album.albums.length));
 			if (index >= album.photos.length) {
 				index -= album.photos.length;
 				self.album(album.albums[index], nextAlbum, error);
 			} else
 				callback(album, album.photos[index]);
-		};
+		}
 		if (typeof subalbum.photos !== "undefined" && subalbum.photos !== null)
 			nextAlbum(subalbum);
 		else
 			this.album(subalbum, nextAlbum, error);
 	};
+
 	PhotoFloat.prototype.parseHash = function(hash, callback, error) {
 		var index, album, photo;
 		hash = PhotoFloat.cleanHash(hash);
@@ -88,20 +114,30 @@
 			callback(theAlbum, photo, i);
 		}, error);
 	};
+
 	PhotoFloat.prototype.authenticate = function(password, result) {
-		$.ajax({
-			type: "GET",
-			dataType: "text",
-			url: "auth?username=photos&password=" + password,
-			success: function() {
-				result(true);
-			},
-			error: function() {
-				result(false);
-			}
-		});
+		fetch("auth?username=photos&password=" + encodeURIComponent(password), { credentials: "same-origin" })
+			.then(function(response) { result(response.ok); }, function() { result(false); });
 	};
-	
+
+	/* Smallest generated thumbnail that is sharp at `cssSize` px on this screen. */
+	PhotoFloat.prototype.thumbSize = function(cssSize) {
+		return this.pickSize(this.options.thumbSizes, cssSize * (window.devicePixelRatio || 1));
+	};
+
+	/* Smallest generated photo size whose longest side covers `pixels`. */
+	PhotoFloat.prototype.photoSize = function(pixels) {
+		return this.pickSize(this.options.photoSizes, pixels);
+	};
+
+	PhotoFloat.prototype.pickSize = function(sizes, pixels) {
+		for (var i = 0; i < sizes.length; ++i) {
+			if (sizes[i] >= pixels)
+				return sizes[i];
+		}
+		return sizes[sizes.length - 1];
+	};
+
 	/* static functions */
 	PhotoFloat.cachePath = function(path) {
 		if (path === "")
@@ -111,15 +147,7 @@
 		path = path
 			.replace(/ /g, "_")
 			.replace(/\//g, "-")
-			.replace(/\(/g, "")
-			.replace(/\)/g, "")
-			.replace(/#/g, "")
-			.replace(/&/g, "")
-			.replace(/,/g, "")
-			.replace(/\[/g, "")
-			.replace(/\]/g, "")
-			.replace(/"/g, "")
-			.replace(/'/g, "")
+			.replace(/[()#&,\[\]"']/g, "")
 			.replace(/_-_/g, "-")
 			.toLowerCase();
 		while (path.indexOf("--") !== -1)
@@ -136,22 +164,17 @@
 			return PhotoFloat.cachePath(album.path);
 		return PhotoFloat.cachePath(album.parent.path + "/" + album.path);
 	};
+	/* Photos in the root album are cached as "root-<name>", others as "<album>-<name>". */
 	PhotoFloat.photoPath = function(album, photo, size, square) {
-		var suffix, hash;
-		if (square)
-			suffix = size.toString() + "s";
-		else
-			suffix = size.toString();
-		hash = PhotoFloat.cachePath(PhotoFloat.photoHash(album, photo) + "_" + suffix + ".jpg");
-		if (hash.indexOf("root-") === 0)
-			hash = hash.substring(5);
-		return "cache/" + hash;
+		var suffix = size.toString() + (square ? "s" : "");
+		return "cache/" + PhotoFloat.cachePath(PhotoFloat.photoHash(album, photo) + "_" + suffix + ".jpg");
 	};
 	PhotoFloat.videoPath = function(album, video) {
 		return "cache/" + PhotoFloat.cachePath(PhotoFloat.photoHash(album, video) + ".mp4");
 	};
 	PhotoFloat.originalPhotoPath = function(album, photo) {
-		return "albums/" + album.path + "/" + photo.name;
+		var path = album.path ? album.path + "/" + photo.name : photo.name;
+		return "albums/" + path.split("/").map(encodeURIComponent).join("/");
 	};
 	PhotoFloat.trimExtension = function(name) {
 		var index = name.lastIndexOf(".");
@@ -174,19 +197,15 @@
 			else
 				break;
 		}
+		try {
+			hash = decodeURIComponent(hash);
+		} catch (e) {}
 		return hash;
 	};
-	
+
 	/* make static methods callable as member functions */
-	PhotoFloat.prototype.cachePath = PhotoFloat.cachePath;
-	PhotoFloat.prototype.photoHash = PhotoFloat.photoHash;
-	PhotoFloat.prototype.albumHash = PhotoFloat.albumHash;
-	PhotoFloat.prototype.photoPath = PhotoFloat.photoPath;
-	PhotoFloat.prototype.videoPath = PhotoFloat.videoPath;
-	PhotoFloat.prototype.originalPhotoPath = PhotoFloat.originalPhotoPath;
-	PhotoFloat.prototype.trimExtension = PhotoFloat.trimExtension;
-	PhotoFloat.prototype.cleanHash = PhotoFloat.cleanHash;
-	
-	/* expose class globally */
+	["cachePath", "photoHash", "albumHash", "photoPath", "videoPath", "originalPhotoPath", "trimExtension", "cleanHash"]
+		.forEach(function(name) { PhotoFloat.prototype[name] = PhotoFloat[name]; });
+
 	window.PhotoFloat = PhotoFloat;
 }());

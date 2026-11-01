@@ -40,3 +40,11 @@ site.webmanifest
 
 web/cache
 web/albums
+web/scripts.min.js
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+build/
+dist/
+photofloat/floatapp/scanner.pid
